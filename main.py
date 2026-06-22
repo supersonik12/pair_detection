@@ -7,15 +7,14 @@ from PairEventCNN import PairEventCNN
 BATCH_SIZE = 64
 # HIDDEN_DIM = ???
 
-def main():
-    if (len(sys.argv) < 2):
-        print("Usage: py main.py <datafile1> [<datafile2> ...]")
-        exit()
-    
+def MLP_run():    
     # Create EventDatasets from all data files provided and combine
     datasets = []
     for filename in sys.argv[1:]:
-        datasets.append(EventDataset(filename))
+        dataset = EventDataset(filename)
+        # function to adapt new dataset code (w more dimensions)
+        dataset.flat()
+        datasets.append(dataset)
     full_dataset = ConcatDataset(datasets)
 
     # this is torch.utils.data.random_split
@@ -47,4 +46,8 @@ def main():
     print("Done")
 
 if __name__ == '__main__':
-    main()
+    if (len(sys.argv) < 2):
+        print("Usage: py main.py <datafile1> [<datafile2> ...]")
+        exit()
+
+    MLP_run()

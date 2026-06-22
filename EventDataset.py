@@ -2,13 +2,13 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset
 
-TKR_COUNT = 600
+LAYER_COUNT = 4
 # 75 per direction per layer
-WLS_FAST_COUNT = 75 * 2 * 4
-WLS_SLOW_COUNT = 75 * 2 * 4
-# Edge detector, 3 per direction per layer
-ED_COUNT = 24
-CAL_COUNT = 24
+WLS_FAST_COUNT = 75
+WLS_SLOW_COUNT = 75
+# 3 per direction per layer
+ED_COUNT = 3
+CAL_COUNT = 3
 TOTAL_FEATURES = WLS_SLOW_COUNT + WLS_FAST_COUNT + ED_COUNT + CAL_COUNT
 
 class EventDataset(Dataset):
@@ -19,15 +19,8 @@ class EventDataset(Dataset):
         self.total_count = len(self.event_labels)
         print(f'{self.pair_count} pair events out of {self.total_count} total')
 
-        # python list > np array > pytorch tensor
-        # there's probably a better way to do this
         self.features_tensor = torch.tensor(np.array(self.event_inputs), dtype=torch.float32)
         self.labels_tensor = torch.tensor(self.event_labels, dtype=torch.float32)
-
-        # scale?
-        # max_vals = self.features_tensor.max(dim=0, keepdim=True)[0]
-        # max_vals[max_vals == 0] = 1.0
-        # self.features_tensor = self.features_tensor / max_vals
 
 
     def parse_file(self, file_path):
@@ -50,40 +43,45 @@ class EventDataset(Dataset):
                         data_inputs.append(curr_row.copy())
                         data_labels.append(curr_type)
 
-                    curr_row = np.zeros(TOTAL_FEATURES)
+                    # 4 layers of 2 directions of 156 features each (WLS plus ED plus Cal)
+                    curr_row = np.zeros((LAYER_COUNT, 2, TOTAL_FEATURES))
                     curr_type = 1 if 'PAIR' in row_type else 0                            
 
                 elif row_type == 'WLS_Fast':
                     if curr_row is None:  
                         raise ValueError("Couldn't read event from file", file_path)
+                    layer = int(parts[1])
                     direction = 1 if parts[2] == 'y' else 0
-                    component_id = (int(parts[1]) * 75 * 2) + direction * 75 + int(parts[3])
+                    component_id = int(parts[3])
                     signal = float(parts[7])
-                    curr_row[component_id] = signal
+                    curr_row[layer][direction][component_id] = signal
 
                 elif row_type == 'WLS_Slow':
                     if curr_row is None:  
                         raise ValueError("Couldn't read event from file", file_path)
+                    layer = int(parts[1])
                     direction = 1 if parts[2] == 'y' else 0
-                    component_id = WLS_FAST_COUNT + (int(parts[1]) * 75 * 2) + direction * 75 + int(parts[3])
+                    component_id = WLS_FAST_COUNT + int(parts[3])
                     signal = float(parts[7])
-                    curr_row[component_id] = signal
+                    curr_row[layer][direction][component_id] = signal
 
                 elif row_type == 'Edge_Detector':
                     if curr_row is None:  
                         raise ValueError("Couldn't read event from file", file_path)
+                    layer = int(parts[1])
                     direction = 1 if parts[2] == 'y' else 0
-                    component_id = WLS_FAST_COUNT + WLS_SLOW_COUNT + (int(parts[1]) * 3 * 2) + direction * 3 + int(parts[3])
+                    component_id = WLS_FAST_COUNT + WLS_SLOW_COUNT + int(parts[3])
                     signal = float(parts[7])
-                    curr_row[component_id] = signal
+                    curr_row[layer][direction][component_id] = signal
 
                 elif row_type == 'Calorimeter':
                     if curr_row is None:  
                         raise ValueError("Couldn't read event from file", file_path)
+                    layer = int(parts[1])
                     direction = 1 if parts[2] == 'y' else 0
-                    component_id = WLS_FAST_COUNT + WLS_SLOW_COUNT + ED_COUNT + (int(parts[1]) * 3 * 2) + direction * 3 + int(parts[3])
+                    component_id = WLS_FAST_COUNT + WLS_SLOW_COUNT + ED_COUNT + int(parts[3])
                     signal = float(parts[7])
-                    curr_row[component_id] = signal
+                    curr_row[layer][direction][component_id] = signal
 
                 else:
                     pass
@@ -109,3 +107,5 @@ class EventDataset(Dataset):
     def get_counts(self):
         return (self.pair_count, self.total_count)
 
+    def flat(self):
+        self.features_tensor = self.features_tensor.reshape((len(self.features_tensor), 4*2*156))

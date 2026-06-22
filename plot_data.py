@@ -2,6 +2,7 @@ import sys
 import matplotlib
 import matplotlib.pyplot as plt
 from EventDataset import EventDataset
+import random
 
 WLS_FAST_COUNT = 75 * 2 * 4
 WLS_SLOW_COUNT = 75 * 2 * 4
@@ -39,8 +40,8 @@ def plot_histograms(statistics, labels):
 
     for idx, key in enumerate(keys):
         ax = axes[idx]
-        ax.hist(statistics[key][nonpair_mask], bins=40, alpha=0.6, label='non-pair', color=NON_PAIR_COLOR, log=True)
         ax.hist(statistics[key][pair_mask], bins=40, alpha=0.6, label='pair', color=PAIR_COLOR, log=True)
+        ax.hist(statistics[key][nonpair_mask], bins=40, alpha=0.6, label='non-pair', color=NON_PAIR_COLOR, log=True)
         ax.set_title(key)
         ax.legend()
         ax.grid(True, linestyle=':', alpha=0.4)
@@ -48,14 +49,15 @@ def plot_histograms(statistics, labels):
     fig.tight_layout()
     plt.show()
 
-def plot_event_scatter(features, labels):
-    # pick a couple random events - 5 pair and 5 non-pair
+
+def plot_event_scatter(features, labels, n=0):
 
     fig, axes = plt.subplots(2)
 
-    n = 1
-    event = features[n][WLS_FAST_COUNT:WLS_FAST_COUNT+WLS_SLOW_COUNT]
-    fig.suptitle(f"Event {n} - {"PAIR" if labels[n] == 1 else "NOT-PAIR"}")
+    event = features[n][0:WLS_FAST_COUNT+WLS_SLOW_COUNT]
+    fig.suptitle(f"Event {n}")
+    print(f"Event {n} - {"PAIR" if labels[n] == 1 else "NOT-PAIR"}")
+    # fig.suptitle(f"Event {n} - {"PAIR" if labels[n] == 1 else "NOT-PAIR"}")
 
     norm = matplotlib.colors.Normalize(vmin=0, vmax=max(event))
     colorizer = matplotlib.colorizer.Colorizer(norm=norm, cmap="plasma")
@@ -72,7 +74,7 @@ def plot_event_scatter(features, labels):
             if event[i] != 0:
                 axes[0].scatter(x, z, c=event[i], cmap="plasma", vmin=0, vmax=max(event))
             i += 1
-        i+=75
+        i += 75
     axes[0].set_title("X direction")
 
     i = 0
@@ -82,10 +84,11 @@ def plot_event_scatter(features, labels):
             if event[i] != 0:
                 axes[1].scatter(y, z, c=event[i], cmap="plasma", vmin=0, vmax=max(event))
             i += 1
-    # axes[1].yticks(range(4))
     axes[1].set_title("Y direction")
 
     plt.show()
+    # plt.savefig(f"graphs/event_{n}.png")
+
 
 def main():
     if (len(sys.argv) < 2):
@@ -98,8 +101,10 @@ def main():
 
     statistics = summarize_event_features(features)
     plot_histograms(statistics, labels)
-
-    # plot_event_scatter(features, labels)
+    
+    # flashcards!
+    # for i in range(10):
+    #     plot_event_scatter(features, labels, random.randint(0, len(features) - 1))
 
 
 if __name__ == '__main__':

@@ -3,7 +3,7 @@ import torch.optim as optim
 import torch
 
 class PairEventClassifier(nn.Module):
-    def __init__(self, input_dim, pos_weight=0.5, hidden_dim=832):
+    def __init__(self, input_dim, pos_weight=0.5, hidden_dim=128):
         super().__init__()
         self.model = nn.Sequential(
             nn.Linear(input_dim, hidden_dim),
@@ -86,7 +86,6 @@ class PairEventClassifier(nn.Module):
                 # predict outputs by running through the model
                 predicted = self.model(inputs)
                 # yes this is applied elementwise
-                # predicted = torch.round(predicted.squeeze())
                 predicted = (predicted > 0.0).int().squeeze()
 
                 true_positive += ((predicted == 1) & (labels == 1)).sum()

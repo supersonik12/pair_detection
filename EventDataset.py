@@ -44,7 +44,6 @@ class EventDataset(Dataset):
                     continue
                 row_type = parts[0]
 
-                # TODO: convert this to a switch case it would be so so much better
                 if 'EVENT' in row_type:
                     # Structure: EVENT [id] [x] [y] [z] [KE (disregard)]
                     if curr_row is not None:
@@ -54,7 +53,6 @@ class EventDataset(Dataset):
                     curr_row = np.zeros(TOTAL_FEATURES)
                     curr_type = 1 if 'PAIR' in row_type else 0                            
 
-                # TODO: check that row counting error (directions) is fixed
                 elif row_type == 'WLS_Fast':
                     if curr_row is None:  
                         raise ValueError("Couldn't read event from file", file_path)

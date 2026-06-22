@@ -35,8 +35,9 @@ def main():
         total_count += set.get_counts()[1]
     pos_weight = pair_count / (total_count - pair_count)
     input_dim = len(train_dataset[0][0])
+    print(f'Input dimensions: {input_dim}')
 
-    model = PairEventClassifier(input_dim)
+    model = PairEventClassifier(input_dim, pos_weight=pos_weight)
 
     print("Training model...")
     model.fit(trainloader=train_dataloader, validationloader=valid_dataloader)

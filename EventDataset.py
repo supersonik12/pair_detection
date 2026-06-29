@@ -9,6 +9,7 @@ WLS_SLOW_COUNT = 75
 # 3 per direction per layer
 ED_COUNT = 3
 CAL_COUNT = 3
+# Features per layer
 TOTAL_FEATURES = WLS_SLOW_COUNT + WLS_FAST_COUNT + ED_COUNT + CAL_COUNT
 
 class EventDataset(Dataset):
@@ -43,8 +44,8 @@ class EventDataset(Dataset):
                         data_inputs.append(curr_row.copy())
                         data_labels.append(curr_type)
 
-                    # 4 layers of 2 directions of 156 features each (WLS plus ED plus Cal)
-                    curr_row = np.zeros((LAYER_COUNT, 2, TOTAL_FEATURES))
+                    # 2 channels / directions 4 layers of 156 features each (WLS plus ED plus Cal)
+                    curr_row = np.zeros((2, LAYER_COUNT, TOTAL_FEATURES))
                     curr_type = 1 if 'PAIR' in row_type else 0                            
 
                 elif row_type == 'WLS_Fast':
@@ -54,7 +55,7 @@ class EventDataset(Dataset):
                     direction = 1 if parts[2] == 'y' else 0
                     component_id = int(parts[3])
                     signal = float(parts[7])
-                    curr_row[layer][direction][component_id] = signal
+                    curr_row[direction][layer][component_id] = signal
 
                 elif row_type == 'WLS_Slow':
                     if curr_row is None:  
@@ -63,7 +64,7 @@ class EventDataset(Dataset):
                     direction = 1 if parts[2] == 'y' else 0
                     component_id = WLS_FAST_COUNT + int(parts[3])
                     signal = float(parts[7])
-                    curr_row[layer][direction][component_id] = signal
+                    curr_row[direction][layer][component_id] = signal
 
                 elif row_type == 'Edge_Detector':
                     if curr_row is None:  
@@ -72,7 +73,7 @@ class EventDataset(Dataset):
                     direction = 1 if parts[2] == 'y' else 0
                     component_id = WLS_FAST_COUNT + WLS_SLOW_COUNT + int(parts[3])
                     signal = float(parts[7])
-                    curr_row[layer][direction][component_id] = signal
+                    curr_row[direction][layer][component_id] = signal
 
                 elif row_type == 'Calorimeter':
                     if curr_row is None:  
@@ -81,7 +82,7 @@ class EventDataset(Dataset):
                     direction = 1 if parts[2] == 'y' else 0
                     component_id = WLS_FAST_COUNT + WLS_SLOW_COUNT + ED_COUNT + int(parts[3])
                     signal = float(parts[7])
-                    curr_row[layer][direction][component_id] = signal
+                    curr_row[direction][layer][component_id] = signal
 
                 else:
                     pass

@@ -46,7 +46,7 @@ class EventDataset(Dataset):
 
                     # 2 channels / directions 4 layers of 156 features each (WLS plus ED plus Cal)
                     curr_row = np.zeros((2, LAYER_COUNT, TOTAL_FEATURES))
-                    curr_type = 1 if 'PAIR' in row_type else 0                            
+                    curr_type = 1 if 'PAIR' in row_type else 0
 
                 elif row_type == 'WLS_Fast':
                     if curr_row is None:  
@@ -109,4 +109,4 @@ class EventDataset(Dataset):
         return (self.pair_count, self.total_count)
 
     def flat(self):
-        self.features_tensor = self.features_tensor.reshape((len(self.features_tensor), 4*2*156))
+        self.features_tensor = self.features_tensor.reshape((len(self.features_tensor), 4*2*TOTAL_FEATURES))

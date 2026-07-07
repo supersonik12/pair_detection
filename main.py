@@ -4,6 +4,7 @@ from torch.utils.data import DataLoader, ConcatDataset, random_split
 from EventDataset import EventDataset
 from PairEventClassifier import PairEventClassifier
 from PairEventCNN import PairEventCNN
+from PairEvent2dCNN import PairEvent2dCNN
 
 BATCH_SIZE = 64
 # HIDDEN_DIM = ???
@@ -32,7 +33,7 @@ def MLP_run():
     for set in datasets:
         pair_count += set.get_counts()[0]
         total_count += set.get_counts()[1]
-    pos_weight = pair_count / (total_count - pair_count)
+    pos_weight = (total_count - pair_count) / pair_count
     input_dim = len(train_dataset[0][0])
     print(f'Input dimensions: {input_dim}')
 
@@ -42,8 +43,9 @@ def MLP_run():
     model.fit(trainloader=train_dataloader, validationloader=val_dataloader)
 
     print("Testing model...")
-    model.test(testloader=test_dataloader)
+    accuracy = model.test(testloader=test_dataloader)
     print("Done")
+    return accuracy
 
 def CNN_run():    
 
@@ -67,10 +69,10 @@ def CNN_run():
     for set in datasets:
         pair_count += set.get_counts()[0]
         total_count += set.get_counts()[1]
-    pos_weight = round((total_count - pair_count) / pair_count, 3)
-    print(pos_weight)
+    pos_weight = (total_count - pair_count) / pair_count
+    print(f'Proportion of negatives/positives = {pos_weight}')
 
-    model = PairEventCNN(pos_weight=pos_weight, lr=0.0001)
+    model = PairEvent2dCNN(pos_weight=1, lr=0.0001)
 
     # 'accelerator="auto"' automatically selects GPU/MPS if available, otherwise CPU
     trainer = pl.Trainer(
@@ -78,7 +80,7 @@ def CNN_run():
         devices=1,
         logger=False,
         enable_checkpointing=False,
-        max_epochs=20)
+        max_epochs=35)
     
     print("Training model...")
     trainer.fit(model, train_dataloaders=train_dataloader, val_dataloaders=val_dataloader)

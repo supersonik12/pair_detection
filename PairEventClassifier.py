@@ -3,7 +3,7 @@ import torch.optim as optim
 import torch
 
 class PairEventClassifier(nn.Module):
-    def __init__(self, input_dim, pos_weight=0.5, hidden_dim=128):
+    def __init__(self, input_dim, pos_weight=1, hidden_dim=128):
         super().__init__()
         self.model = nn.Sequential(
             nn.Linear(input_dim, hidden_dim),
@@ -94,10 +94,13 @@ class PairEventClassifier(nn.Module):
                 false_negative += ((predicted == 0) & (labels == 1)).sum()
 
         total = true_positive+true_negative+false_negative+false_positive
+        accuracy = 100 * (true_negative + true_positive) / total
         print('Confusion matrix:')
         print(f'TP: {true_positive}, FP: {false_positive}')
         print(f'FN: {false_negative}, TN: {true_negative}')
-        print(f'Overall accuracy: {100 * (true_negative + true_positive) / total:.3f}%')
+        print(f'Overall accuracy: {accuracy:.3f}%')
+
+        return accuracy
 
     
     def save(self, filepath):
